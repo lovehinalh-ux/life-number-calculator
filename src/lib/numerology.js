@@ -1,5 +1,3 @@
-const MASTER_NUMBERS = new Set([11, 22, 33]);
-
 function onlyDigits(str) {
   return (str.match(/\d/g) || []).map(Number);
 }
@@ -86,9 +84,14 @@ export function calculateNumerology(raw) {
 
   const firstTotal = parsed.digits.reduce((acc, n) => acc + n, 0);
   const secondTotal = sumDigits(firstTotal);
-  const lifeNumber = MASTER_NUMBERS.has(secondTotal) ? sumDigits(secondTotal) : reduceToSingle(secondTotal);
+  const hasMasterNumber = secondTotal >= 10;
+  const masterNumber = hasMasterNumber ? secondTotal : null;
+  const lifeNumber = hasMasterNumber ? reduceToSingle(masterNumber) : secondTotal;
   const circles = countDigits(parsed.digits);
-  const triangles = countDigits([...String(firstTotal), ...String(secondTotal)].map(Number));
+  const triangleDigits = hasMasterNumber
+    ? [...String(firstTotal), ...String(masterNumber)]
+    : [...String(firstTotal)];
+  const triangles = countDigits(triangleDigits.map(Number));
   const squareAt = lifeNumber;
   // Only 1-9 digits that are visible in the 3x3 grid (circle/triangle/square).
   const visibleDigits = collectVisibleDigits(circles, triangles, squareAt);
@@ -97,7 +100,7 @@ export function calculateNumerology(raw) {
 
   return {
     postnatal: firstTotal,
-    master: secondTotal,
+    master: masterNumber,
     life: lifeNumber,
     circles,
     triangles,
