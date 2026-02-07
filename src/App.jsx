@@ -149,6 +149,7 @@ export default function App() {
 
   const lifeGuide = result ? NUMBER_GUIDES[result.life] : null;
   const riskNumbersText = scoreResult.riskItems.map((item) => item.number).join("、");
+  const masterValue = result ? (result.master ?? "") : "-";
   const riskGuides = useMemo(
     () => scoreResult.riskItems.map((item) => ({ ...item, guide: NUMBER_GUIDES[item.number] })),
     [scoreResult.riskItems],
@@ -240,7 +241,7 @@ export default function App() {
         </article>
         <article className="metric">
           <h2 className="metric-label">卓越數</h2>
-          <div className="metric-value black">{result ? result.master : "-"}</div>
+          <div className="metric-value black">{masterValue}</div>
         </article>
         <article className="metric">
           <h2 className="metric-label">主命數</h2>
@@ -294,7 +295,7 @@ export default function App() {
                   <div className="life-meta-chips">
                     <span className="meta-chip">先天數：{bornDigits.join("、") || "無"}</span>
                     <span className="meta-chip">後天數：{result.postnatal}</span>
-                    <span className="meta-chip">卓越數：{result.master}</span>
+                    <span className="meta-chip">卓越數：{result.master ?? ""}</span>
                   </div>
                   <div className="pm-block plus"><strong>(+)</strong><span>{lifeGuide.plus}</span></div>
                   <div className="pm-block minus"><strong>(-)</strong><span>{lifeGuide.minus}</span></div>
