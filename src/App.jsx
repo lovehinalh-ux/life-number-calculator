@@ -9,24 +9,40 @@ function ShapeCell({ number, result }) {
   const hasSquare = result ? result.squareAt === number : false;
   const muted = !circleCount && !triangleCount && !hasSquare;
 
+  const DIGIT_BASE = 76;
+  const CIRCLE_FIRST_DELTA = 28;
+  const CIRCLE_STEP = 22;
+  const TRIANGLE_FROM_CIRCLE_DELTA = 18;
+  const TRIANGLE_FROM_DIGIT_DELTA = 26;
+  const TRIANGLE_STEP = 24;
+
+  function getCircleDiameter(index) {
+    return DIGIT_BASE + CIRCLE_FIRST_DELTA + (index * CIRCLE_STEP);
+  }
+
+  function getLastCircleDiameter(count) {
+    if (count <= 0) return null;
+    return getCircleDiameter(count - 1);
+  }
+
+  function getFirstTriangleWidth(count) {
+    const lastCircleDiameter = getLastCircleDiameter(count);
+    if (lastCircleDiameter) return lastCircleDiameter + TRIANGLE_FROM_CIRCLE_DELTA;
+    return DIGIT_BASE + TRIANGLE_FROM_DIGIT_DELTA;
+  }
+
+  function getTriangleWidth(index, count) {
+    return getFirstTriangleWidth(count) + (index * TRIANGLE_STEP);
+  }
+
   const circles = Array.from({ length: circleCount }).map((_, i) => {
-    const size = 60 + (circleCount - i - 1) * 24;
+    const size = getCircleDiameter(i);
     return <div key={`c-${size}-${i}`} className="shape circle" style={{ width: size, height: size }} />;
   });
 
   const triangles = Array.from({ length: triangleCount }).map((_, i) => {
-    let baseSize = 44;
-    let step = 0;
-
-    if (triangleCount === 2) {
-      baseSize = 38;
-      step = 14;
-    } else if (triangleCount >= 3) {
-      baseSize = 34;
-      step = 12;
-    }
-
-    const size = baseSize + (triangleCount - i - 1) * step;
+    const triangleWidth = getTriangleWidth(i, circleCount);
+    const size = triangleWidth / 2;
     const width = size * 2;
     const height = size * 1.72;
 
@@ -62,6 +78,38 @@ export default function App() {
   const [value, setValue] = useState(defaultDate);
   const result = useMemo(() => calculateNumerology(value), [value]);
 
+  function calculateShapeScores(currentResult) {
+    const scores = new Map();
+    const riskItems = [];
+
+    for (let number = 1; number <= 9; number += 1) {
+      if (!currentResult) {
+        scores.set(number, 0);
+        continue;
+      }
+
+      const circleScore = currentResult.circles.get(number) * 1;
+      const triangleScore = currentResult.triangles.get(number) * 2;
+      const squareScore = currentResult.squareAt === number ? 4 : 0;
+      const totalScore = circleScore + triangleScore + squareScore;
+
+      scores.set(number, totalScore);
+
+      if (totalScore > 2) {
+        riskItems.push({ number, score: totalScore });
+      }
+    }
+
+    riskItems.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.number - b.number;
+    });
+
+    return { scores, riskItems };
+  }
+
+  const scoreResult = useMemo(() => calculateShapeScores(result), [result]);
+
   const bornDigits = useMemo(() => {
     if (!result) return [];
     const output = [];
@@ -72,6 +120,7 @@ export default function App() {
   }, [result]);
 
   const lifeGuide = result ? NUMBER_GUIDES[result.life] : null;
+  const riskNumbersText = scoreResult.riskItems.map((item) => item.number).join("、");
 
   function syncQuery(nextValue) {
     const normalized = normalizeInputValue(nextValue);
@@ -164,11 +213,18 @@ export default function App() {
                 </div>
                 <div className="pm-block"><strong>(+)</strong>{lifeGuide.plus}</div>
                 <div className="pm-block"><strong>(-)</strong>{lifeGuide.minus}</div>
+                <div className="life-risk-note">
+                  <strong>需留意負向特質：</strong>
+                  {scoreResult.riskItems.length > 0
+                    ? `超過兩分的生命靈數為 ${riskNumbersText}。`
+                    : "目前沒有超過兩分的生命靈數。"}
+                </div>
               </>
             ) : (
               <>
                 <div className="life-head">請先輸入生日</div>
                 <div className="life-meta">輸入後會顯示你對應的說明。</div>
+                <div className="life-risk-note"><strong>需留意負向特質：</strong>請先輸入有效生日。</div>
               </>
             )}
           </article>
@@ -177,7 +233,7 @@ export default function App() {
             <h4>九宮格線組合</h4>
             <ul className="line-list">
               {LINE_GUIDES.map((line) => {
-                const active = result ? isLineActive(line.code, result.presentDigits) : false;
+                const active = result ? isLineActive(line.code, result.lineDigits) : false;
                 return (
                   <li key={line.code} className={`line-item ${active ? "active" : ""}`}>
                     <span className="line-name">{line.code} {line.name}</span>
@@ -188,6 +244,25 @@ export default function App() {
             </ul>
           </article>
         </div>
+
+        <article className="score-note-card">
+          <h4>隱藏計算式備註</h4>
+          <p className="score-note-desc">系統已套用圖形權重評分，僅顯示分數超過 2 分的數字。</p>
+          {!result ? (
+            <p className="score-note-empty">請先輸入有效生日。</p>
+          ) : scoreResult.riskItems.length === 0 ? (
+            <p className="score-note-empty">目前沒有分數超過 2 分的數字。</p>
+          ) : (
+            <ul className="score-note-list">
+              {scoreResult.riskItems.map((item) => (
+                <li key={`score-${item.number}`} className="score-note-item">
+                  <span>數字 {item.number}（負面特質較容易顯現）</span>
+                  <span className="score-note-badge">{item.score} 分</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
 
         <details className="full-guide">
           <summary>查看 1-9 全部正負向解讀</summary>
