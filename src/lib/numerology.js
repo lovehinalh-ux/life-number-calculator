@@ -1,0 +1,77 @@
+const MASTER_NUMBERS = new Set([11, 22, 33]);
+
+function onlyDigits(str) {
+  return (str.match(/\d/g) || []).map(Number);
+}
+
+function sumDigits(value) {
+  return String(value)
+    .split("")
+    .map(Number)
+    .reduce((total, current) => total + current, 0);
+}
+
+function reduceToSingle(value) {
+  let current = value;
+  while (current > 9) {
+    current = sumDigits(current);
+  }
+  return current;
+}
+
+export function parseBirthday(raw) {
+  const digits = onlyDigits(raw);
+  if (digits.length !== 8) return null;
+
+  const year = Number(digits.slice(0, 4).join(""));
+  const month = Number(digits.slice(4, 6).join(""));
+  const day = Number(digits.slice(6, 8).join(""));
+
+  if (month < 1 || month > 12) return null;
+  if (day < 1 || day > 31) return null;
+  if (year < 1000 || year > 2999) return null;
+
+  return { digits, year, month, day };
+}
+
+export function normalizeInputValue(value) {
+  const parsed = parseBirthday(value);
+  if (!parsed) return value;
+  return `${parsed.year}/${String(parsed.month).padStart(2, "0")}/${String(parsed.day).padStart(2, "0")}`;
+}
+
+function countDigits(digits) {
+  const map = new Map();
+  for (let number = 1; number <= 9; number += 1) map.set(number, 0);
+
+  for (const digit of digits) {
+    if (digit >= 1 && digit <= 9) {
+      map.set(digit, map.get(digit) + 1);
+    }
+  }
+
+  return map;
+}
+
+export function isLineActive(code, presentDigits) {
+  return code.split("").every((digit) => presentDigits.has(Number(digit)));
+}
+
+export function calculateNumerology(raw) {
+  const parsed = parseBirthday(raw);
+  if (!parsed) return null;
+
+  const firstTotal = parsed.digits.reduce((acc, n) => acc + n, 0);
+  const secondTotal = sumDigits(firstTotal);
+  const lifeNumber = MASTER_NUMBERS.has(secondTotal) ? sumDigits(secondTotal) : reduceToSingle(secondTotal);
+
+  return {
+    postnatal: firstTotal,
+    master: secondTotal,
+    life: lifeNumber,
+    circles: countDigits(parsed.digits),
+    triangles: countDigits([...String(firstTotal), ...String(secondTotal)].map(Number)),
+    squareAt: lifeNumber,
+    presentDigits: new Set(parsed.digits),
+  };
+}
