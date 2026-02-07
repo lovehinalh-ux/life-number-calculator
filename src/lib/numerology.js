@@ -53,6 +53,29 @@ function countDigits(digits) {
   return map;
 }
 
+function collectVisibleDigits(circles, triangles, squareAt) {
+  const digits = new Set();
+  for (let number = 1; number <= 9; number += 1) {
+    const hasCircle = circles.get(number) > 0;
+    const hasTriangle = triangles.get(number) > 0;
+    const hasSquare = squareAt === number;
+
+    if (hasCircle || hasTriangle || hasSquare) {
+      digits.add(number);
+    }
+  }
+
+  return digits;
+}
+
+function collectLineDigits(visibleDigits, rawDigits) {
+  const digits = new Set(visibleDigits);
+  if (rawDigits.includes(0)) {
+    digits.add(0);
+  }
+  return digits;
+}
+
 export function isLineActive(code, presentDigits) {
   return code.split("").every((digit) => presentDigits.has(Number(digit)));
 }
@@ -64,14 +87,22 @@ export function calculateNumerology(raw) {
   const firstTotal = parsed.digits.reduce((acc, n) => acc + n, 0);
   const secondTotal = sumDigits(firstTotal);
   const lifeNumber = MASTER_NUMBERS.has(secondTotal) ? sumDigits(secondTotal) : reduceToSingle(secondTotal);
+  const circles = countDigits(parsed.digits);
+  const triangles = countDigits([...String(firstTotal), ...String(secondTotal)].map(Number));
+  const squareAt = lifeNumber;
+  // Only 1-9 digits that are visible in the 3x3 grid (circle/triangle/square).
+  const visibleDigits = collectVisibleDigits(circles, triangles, squareAt);
+  // Line checks use visible digits, plus 0 from raw birthday for the 1590 rule.
+  const lineDigits = collectLineDigits(visibleDigits, parsed.digits);
 
   return {
     postnatal: firstTotal,
     master: secondTotal,
     life: lifeNumber,
-    circles: countDigits(parsed.digits),
-    triangles: countDigits([...String(firstTotal), ...String(secondTotal)].map(Number)),
-    squareAt: lifeNumber,
-    presentDigits: new Set(parsed.digits),
+    circles,
+    triangles,
+    squareAt,
+    visibleDigits,
+    lineDigits,
   };
 }
