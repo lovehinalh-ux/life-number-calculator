@@ -10,20 +10,20 @@ function ShapeCell({ number, result }) {
   const muted = !circleCount && !triangleCount && !hasSquare;
 
   const circles = Array.from({ length: circleCount }).map((_, i) => {
-    const size = 56 + (circleCount - i - 1) * 22;
+    const size = 60 + (circleCount - i - 1) * 24;
     return <div key={`c-${size}-${i}`} className="shape circle" style={{ width: size, height: size }} />;
   });
 
   const triangles = Array.from({ length: triangleCount }).map((_, i) => {
-    let baseSize = 42;
+    let baseSize = 44;
     let step = 0;
 
     if (triangleCount === 2) {
+      baseSize = 38;
+      step = 14;
+    } else if (triangleCount >= 3) {
       baseSize = 34;
       step = 12;
-    } else if (triangleCount >= 3) {
-      baseSize = 30;
-      step = 8;
     }
 
     const size = baseSize + (triangleCount - i - 1) * step;

@@ -135,7 +135,7 @@ body {
 .shape-layer {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 8;
 }
 
 .digit {
@@ -147,7 +147,7 @@ body {
   font-weight: 800;
   color: #22272b;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
-  z-index: 8;
+  z-index: 6;
 }
 
 .digit.muted { color: var(--muted); }
@@ -161,20 +161,20 @@ body {
 }
 
 .shape.circle {
-  border: 4px solid rgba(56, 155, 227, 0.88);
+  border: 5px solid #349ae3;
   border-radius: 999px;
-  z-index: 2;
+  z-index: 8;
 }
 
 .shape.triangle {
   overflow: visible;
-  z-index: 3;
+  z-index: 9;
 }
 
 .shape.triangle polygon {
-  fill: rgba(53, 194, 119, 0.12);
-  stroke: rgba(53, 194, 119, 0.96);
-  stroke-width: 5.5;
+  fill: none;
+  stroke: #35c277;
+  stroke-width: 6.5;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
@@ -182,9 +182,9 @@ body {
 .shape.square {
   width: 108px;
   height: 108px;
-  border: 8px solid rgba(205, 74, 61, 0.88);
-  background: rgba(205, 74, 61, 0.04);
-  z-index: 4;
+  border: 8px solid #cd4a3d;
+  background: transparent;
+  z-index: 10;
 }
 
 .helper {
